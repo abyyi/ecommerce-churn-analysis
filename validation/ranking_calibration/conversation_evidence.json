@@ -1,0 +1,67 @@
+{
+  "source_conversation_title": "项目开发",
+  "retrieval_date": "2026-10-18",
+  "status": "Recovered from conversation; not executed during recovery.",
+  "items": [
+    {
+      "purpose": "model_load",
+      "turn_id": "ddf572e8-378d-466d-88c5-407d607f4118",
+      "python_snippets": [
+        "import pickle\nimport numpy as np\nimport pandas as pd\n\n# 加载已保存的15特征模型\nwith open(\"../data/sample/churn_model_v2.pkl\", \"rb\") as f:\n    saved = pickle.load(f)\n\nmodel = saved[\"model\"]\nfeatures = saved[\"features\"]\n\nprint(\"模型特征数量：\", len(features))\nprint(\"预测阈值：\", saved[\"threshold\"])\n"
+      ],
+      "reported_output": null
+    },
+    {
+      "purpose": "test_split",
+      "turn_id": "d841caee-e623-4c49-893b-66308ce42217",
+      "python_snippets": [
+        "from sklearn.model_selection import train_test_split\n\n# 使用模型原来的15个特征\nX = user_features_v2[features].fillna(0)\ny = user_features_v2[\"churn\"]\n\n# 复现原来的训练集和测试集划分\nX_train, X_test, y_train, y_test = train_test_split(\n    X, y,\n    test_size=0.2,\n    random_state=42,\n    stratify=y\n)\n\n# 预测测试用户的流失概率\ny_prob = model.predict_proba(X_test)[:, 1]\n\nprint(\"测试用户数量：\", len(X_test))\nprint(\"测试集流失率：\", round(y_test.mean() * 100, 2), \"%\")\n"
+      ],
+      "reported_output": null
+    },
+    {
+      "purpose": "ranking",
+      "turn_id": "ee0b1a75-589e-4709-bfcb-64b2d476fce7",
+      "python_snippets": [
+        "# 整理测试集预测结果\nrisk_results = pd.DataFrame({\n    \"user_id\": user_features_v2.loc[X_test.index, \"user_id\"].values,\n    \"actual_churn\": y_test.values,\n    \"predicted_probability\": y_prob\n})\n\n# 按预测流失概率从高到低排序\nrisk_results = risk_results.sort_values(\n    \"predicted_probability\", ascending=False\n).reset_index(drop=True)\n\n# 测试集整体流失率\nbaseline_rate = risk_results[\"actual_churn\"].mean()\n\n# 计算不同筛选比例下的效果\nresults = []\n\nfor pct in [0.1, 0.2, 0.3]:\n    k = int(len(risk_results) * pct)\n    top_k = risk_results.head(k)\n\n    precision = top_k[\"actual_churn\"].mean()\n    lift = precision / baseline_rate\n\n    results.append({\n        \"Top %\": f\"{int(pct * 100)}%\",\n        \"Users\": k,\n        \"Precision@K\": round(precision, 4),\n        \"Lift@K\": round(lift, 4)\n    })\n\nlift_table = pd.DataFrame(results)\ndisplay(lift_table)\n"
+      ],
+      "reported_output": null
+    },
+    {
+      "purpose": "rule_initial",
+      "turn_id": "ce8b83b5-50a5-425c-bc47-78f19befb0df",
+      "python_snippets": [
+        "# 给测试集添加最近30天的浏览次数\nrule_results = pd.DataFrame({\n    \"actual_churn\": y_test.values,\n    \"recent_30d_views\": X_test[\"recent_30d_views\"].values\n})\n\n# 浏览次数越少，流失风险越高\nrule_results = rule_results.sort_values(\n    \"recent_30d_views\",\n    ascending=True,\n    kind=\"stable\"\n).reset_index(drop=True)\n\n# 计算简单规则的 Precision@K 和 Lift@K\nrule_metrics = []\n\nfor pct in [0.1, 0.2, 0.3]:\n    k = int(len(rule_results) * pct)\n    top_k = rule_results.head(k)\n\n    precision = top_k[\"actual_churn\"].mean()\n    lift = precision / baseline_rate\n\n    rule_metrics.append({\n        \"Top %\": f\"{int(pct * 100)}%\",\n        \"Rule Precision@K\": round(precision, 4),\n        \"Rule Lift@K\": round(lift, 4)\n    })\n\nrule_table = pd.DataFrame(rule_metrics)\n\n# 与随机森林比较\ncomparison = lift_table.merge(rule_table, on=\"Top %\")\n\ndisplay(comparison)\n"
+      ],
+      "reported_output": null
+    },
+    {
+      "purpose": "rule_random_ties",
+      "turn_id": "b40d7355-93c4-4c47-9ae5-264af903f906",
+      "python_snippets": [
+        "# 对简单规则中的并列用户随机排序，重复1000次\nrng = np.random.default_rng(42)\n\nrule_views = X_test[\"recent_30d_views\"].to_numpy()\nactual = y_test.to_numpy()\n\nrule_results_avg = []\n\nfor pct in [0.1, 0.2, 0.3]:\n    k = int(len(actual) * pct)\n    precisions = []\n\n    for _ in range(1000):\n        random_order = rng.permutation(len(actual))\n\n        # 浏览次数少的排前面；相同时随机排序\n        ranking = np.lexsort((\n            random_order,\n            rule_views\n        ))\n\n        selected = ranking[:k]\n        precisions.append(actual[selected].mean())\n\n    avg_precision = np.mean(precisions)\n\n    rule_results_avg.append({\n        \"Top %\": f\"{int(pct * 100)}%\",\n        \"RF Precision@K\": round(\n            risk_results.head(k)[\"actual_churn\"].mean(), 4\n        ),\n        \"Rule Avg Precision@K\": round(avg_precision, 4),\n        \"Rule Avg Lift@K\": round(\n            avg_precision / baseline_rate, 4\n        )\n    })\n\nfair_comparison = pd.DataFrame(rule_results_avg)\ndisplay(fair_comparison)\n"
+      ],
+      "reported_output": null
+    },
+    {
+      "purpose": "calibration",
+      "turn_id": "4e846772-b697-46d0-a815-004d69c9d5f5",
+      "python_snippets": [
+        "import matplotlib.pyplot as plt\nfrom sklearn.calibration import calibration_curve\nfrom sklearn.metrics import brier_score_loss\n\n# 计算校准曲线\nprob_true, prob_pred = calibration_curve(\n    y_test,\n    y_prob,\n    n_bins=10,\n    strategy=\"quantile\"\n)\n\nplt.figure(figsize=(6, 5))\n\n# 理想情况：预测概率 = 实际流失率\nplt.plot([0, 1], [0, 1], \"--\", label=\"Perfect Calibration\")\n\n# 当前模型\nplt.plot(prob_pred, prob_true, \"o-\", label=\"Random Forest\")\n\nplt.xlabel(\"Predicted Churn Probability\")\nplt.ylabel(\"Actual Churn Rate\")\nplt.title(\"Probability Calibration Curve\")\nplt.legend()\nplt.grid(alpha=0.3)\nplt.show()\n\n# Brier Score：越低越好\nprint(\"Brier Score:\", round(brier_score_loss(y_test, y_prob), 4))\n"
+      ],
+      "reported_output": null
+    },
+    {
+      "purpose": "ranking_output",
+      "turn_id": "e3b727f0-6f70-43b0-b109-ba226b7e6844",
+      "python_snippets": [],
+      "reported_output": "|    | **Top %** | **Users** | **Precision@K** | **Lift@K** |\n| -: | --------: | --------: | --------------: | ---------: |\n|  0 |       10% |       188 |          0.9734 |     1.1983 |\n|  1 |       20% |       377 |          0.9655 |     1.1886 |\n|  2 |       30% |       565 |          0.9593 |     1.1810 |\n\n我还是不懂你说到的这几个定义"
+    },
+    {
+      "purpose": "rule_random_ties_output",
+      "turn_id": "a62a07e9-b882-42f6-89fc-6d069770f3a4",
+      "python_snippets": [],
+      "reported_output": "|    | **Top %** | **RF Precision@K** | **Rule Avg Precision@K** | **Rule Avg Lift@K** |\n| -: | --------: | -----------------: | -----------------------: | ------------------: |\n|  0 |       10% |             0.9734 |                   0.9314 |              1.1466 |\n|  1 |       20% |             0.9655 |                   0.9304 |              1.1454 |\n|  2 |       30% |             0.9593 |                   0.9302 |              1.1452 |"
+    }
+  ]
+}

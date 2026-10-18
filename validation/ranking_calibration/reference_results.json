@@ -1,0 +1,37 @@
+{
+  "source": "Original code and user-posted result tables recovered directly from the 项目开发 conversation on 2026-10-18; not recalculated.",
+  "historical_test_users": 1886,
+  "historical_test_churn_rate_rounded": 0.8123,
+  "ranking": [
+    {
+      "fraction": 0.1,
+      "k": 188,
+      "rf_precision_rounded": 0.9734,
+      "rf_lift_rounded": 1.1983,
+      "rule_mean_precision_rounded": 0.9314
+    },
+    {
+      "fraction": 0.2,
+      "k": 377,
+      "rf_precision_rounded": 0.9655,
+      "rf_lift_rounded": 1.1886,
+      "rule_mean_precision_rounded": 0.9304
+    },
+    {
+      "fraction": 0.3,
+      "k": 565,
+      "rf_precision_rounded": 0.9593,
+      "rf_lift_rounded": 1.181,
+      "rule_mean_precision_rounded": 0.9302
+    }
+  ],
+  "rule": "Ascending recent_30d_views; np.random.default_rng(42), 1000 repetitions per fraction, rng.permutation + np.lexsort for tied scores, as recorded in recovered notebook code.",
+  "calibration": {
+    "brier_score_rounded": 0.1275,
+    "curve_assessment": "Recovered original chart was inspected: plotted bins broadly follow the diagonal, with deviations; no claim of optimal calibration.",
+    "additional_calibration_applied": false,
+    "original_curve_image_recovered": true,
+    "bin_table_recovered": false
+  },
+  "scope": "Rounded result tables and original source cells recovered from the conversation. Original chart recovered unchanged. No retraining, scoring or validation was executed during recovery."
+}

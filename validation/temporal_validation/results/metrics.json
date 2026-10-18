@@ -1,0 +1,399 @@
+{
+  "design": "Fixed single temporal backtest; same users may recur. No tuning, calibration, or random-split refit.",
+  "windows": {
+    "train": {
+      "start": "2019-10-01",
+      "cutoff": "2020-01-01",
+      "end": "2020-03-01"
+    },
+    "test": {
+      "start": "2019-11-30",
+      "cutoff": "2020-03-01",
+      "end": "2020-04-30"
+    }
+  },
+  "observation_days": 92,
+  "label_days": 60,
+  "threshold": 0.7,
+  "features": [
+    "recency_days",
+    "purchase_sessions",
+    "total_spend",
+    "total_sessions",
+    "view_count",
+    "cart_count",
+    "purchase_count",
+    "cart_rate",
+    "purchase_rate",
+    "no_view_before",
+    "purchase_session_rate",
+    "recent_30d_views",
+    "recent_30d_carts",
+    "recent_30d_purchases",
+    "recent_30d_sessions"
+  ],
+  "params": {
+    "n_estimators": 200,
+    "max_depth": 5,
+    "min_samples_leaf": 20,
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "train_n": 6717,
+  "train_churn_rate": 0.7888938514217657,
+  "test_seen_users": 3734,
+  "audit": {
+    "first_event": "2019-10-01 00:05:36",
+    "last_event": "2020-04-30 23:59:56",
+    "events": "2635748",
+    "users": "100000"
+  },
+  "monthly": [
+    {
+      "event_month": "2019-10",
+      "events": 274953,
+      "users": 19584,
+      "purchases": 4873
+    },
+    {
+      "event_month": "2019-11",
+      "events": 425600,
+      "users": 23556,
+      "purchases": 5976
+    },
+    {
+      "event_month": "2019-12",
+      "events": 435084,
+      "users": 29043,
+      "purchases": 7148
+    },
+    {
+      "event_month": "2020-01",
+      "events": 356194,
+      "users": 28292,
+      "purchases": 5000
+    },
+    {
+      "event_month": "2020-02",
+      "events": 347223,
+      "users": 27030,
+      "purchases": 7351
+    },
+    {
+      "event_month": "2020-03",
+      "events": 370570,
+      "users": 26255,
+      "purchases": 6441
+    },
+    {
+      "event_month": "2020-04",
+      "events": 426124,
+      "users": 28653,
+      "purchases": 6684
+    }
+  ],
+  "session_check": {
+    "null_keys": 0,
+    "session_mismatches": 196
+  },
+  "original_cache": {
+    "n": 9428,
+    "users": 9428,
+    "churn": 7658.0
+  },
+  "results": {
+    "all": {
+      "n": 6445,
+      "churn_n": 4953,
+      "churn_rate": 0.7685027152831653,
+      "roc_auc": 0.7351226191075467,
+      "macro_f1": 0.6374306829034306,
+      "confusion_matrix": [
+        [
+          558,
+          934
+        ],
+        [
+          587,
+          4366
+        ]
+      ],
+      "rf_top": [
+        {
+          "fraction": 0.1,
+          "k": 644,
+          "precision": 0.9425465838509317,
+          "lift": 1.226471377532658,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.2,
+          "k": 1289,
+          "precision": 0.930178432893716,
+          "lift": 1.210377548960226,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.3,
+          "k": 1933,
+          "precision": 0.9218830832902225,
+          "lift": 1.1995833781153813,
+          "boundary_tie_n": 1
+        }
+      ],
+      "rule_top": [
+        {
+          "fraction": 0.1,
+          "k": 644,
+          "precision": 0.9042037186742118,
+          "lift": 1.1765784306188765,
+          "boundary_tie_n": 2474,
+          "random_ties_1000_mean_precision": 0.9039394409937889
+        },
+        {
+          "fraction": 0.2,
+          "k": 1289,
+          "precision": 0.9042037186742119,
+          "lift": 1.1765784306188765,
+          "boundary_tie_n": 2474,
+          "random_ties_1000_mean_precision": 0.903968192397207
+        },
+        {
+          "fraction": 0.3,
+          "k": 1933,
+          "precision": 0.9042037186742118,
+          "lift": 1.1765784306188765,
+          "boundary_tie_n": 2474,
+          "random_ties_1000_mean_precision": 0.9041955509570616
+        }
+      ]
+    },
+    "seen_users": {
+      "n": 3734,
+      "churn_n": 2860,
+      "churn_rate": 0.7659346545259775,
+      "roc_auc": 0.7627460354291018,
+      "macro_f1": 0.6627436946148603,
+      "confusion_matrix": [
+        [
+          376,
+          498
+        ],
+        [
+          350,
+          2510
+        ]
+      ],
+      "rf_top": [
+        {
+          "fraction": 0.1,
+          "k": 373,
+          "precision": 0.9597855227882037,
+          "lift": 1.2530906091227807,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.2,
+          "k": 746,
+          "precision": 0.9423592493297587,
+          "lift": 1.2303389639850766,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.3,
+          "k": 1120,
+          "precision": 0.93125,
+          "lift": 1.2158347902097901,
+          "boundary_tie_n": 1
+        }
+      ],
+      "rule_top": [
+        {
+          "fraction": 0.1,
+          "k": 373,
+          "precision": 0.9083239595050618,
+          "lift": 1.1859026799971681,
+          "boundary_tie_n": 1778,
+          "random_ties_1000_mean_precision": 0.9081876675603217
+        },
+        {
+          "fraction": 0.2,
+          "k": 746,
+          "precision": 0.9083239595050618,
+          "lift": 1.1859026799971681,
+          "boundary_tie_n": 1778,
+          "random_ties_1000_mean_precision": 0.9085227882037534
+        },
+        {
+          "fraction": 0.3,
+          "k": 1120,
+          "precision": 0.9083239595050618,
+          "lift": 1.1859026799971681,
+          "boundary_tie_n": 1778,
+          "random_ties_1000_mean_precision": 0.9083
+        }
+      ]
+    },
+    "unseen_users": {
+      "n": 2711,
+      "churn_n": 2093,
+      "churn_rate": 0.7720398376982663,
+      "roc_auc": 0.6943877495798139,
+      "macro_f1": 0.598767385526841,
+      "confusion_matrix": [
+        [
+          182,
+          436
+        ],
+        [
+          237,
+          1856
+        ]
+      ],
+      "rf_top": [
+        {
+          "fraction": 0.1,
+          "k": 271,
+          "precision": 0.9188191881918819,
+          "lift": 1.1901188815997095,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.2,
+          "k": 542,
+          "precision": 0.9169741697416974,
+          "lift": 1.187729084648706,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.3,
+          "k": 813,
+          "precision": 0.9003690036900369,
+          "lift": 1.1662209120896752,
+          "boundary_tie_n": 1
+        }
+      ],
+      "rule_top": [
+        {
+          "fraction": 0.1,
+          "k": 271,
+          "precision": 0.8936781609195402,
+          "lift": 1.1575544645259788,
+          "boundary_tie_n": 696,
+          "random_ties_1000_mean_precision": 0.8933284132841327
+        },
+        {
+          "fraction": 0.2,
+          "k": 542,
+          "precision": 0.8936781609195402,
+          "lift": 1.1575544645259788,
+          "boundary_tie_n": 696,
+          "random_ties_1000_mean_precision": 0.8935645756457564
+        },
+        {
+          "fraction": 0.3,
+          "k": 813,
+          "precision": 0.8872781584958707,
+          "lift": 1.1492647337230317,
+          "boundary_tie_n": 126,
+          "random_ties_1000_mean_precision": 0.8872533825338254
+        }
+      ]
+    }
+  },
+  "canonical_session_sensitivity": {
+    "results": {
+      "n": 6445,
+      "churn_n": 4953,
+      "churn_rate": 0.7685027152831653,
+      "roc_auc": 0.735184054509169,
+      "macro_f1": 0.6372262523857941,
+      "confusion_matrix": [
+        [
+          557,
+          935
+        ],
+        [
+          586,
+          4367
+        ]
+      ],
+      "rf_top": [
+        {
+          "fraction": 0.1,
+          "k": 644,
+          "precision": 0.9425465838509317,
+          "lift": 1.226471377532658,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.2,
+          "k": 1289,
+          "precision": 0.930178432893716,
+          "lift": 1.210377548960226,
+          "boundary_tie_n": 1
+        },
+        {
+          "fraction": 0.3,
+          "k": 1933,
+          "precision": 0.9218830832902225,
+          "lift": 1.1995833781153813,
+          "boundary_tie_n": 1
+        }
+      ],
+      "rule_top": [
+        {
+          "fraction": 0.1,
+          "k": 644,
+          "precision": 0.9042037186742118,
+          "lift": 1.1765784306188765,
+          "boundary_tie_n": 2474,
+          "random_ties_1000_mean_precision": 0.9039394409937889
+        },
+        {
+          "fraction": 0.2,
+          "k": 1289,
+          "precision": 0.9042037186742119,
+          "lift": 1.1765784306188765,
+          "boundary_tie_n": 2474,
+          "random_ties_1000_mean_precision": 0.903968192397207
+        },
+        {
+          "fraction": 0.3,
+          "k": 1933,
+          "precision": 0.9042037186742118,
+          "lift": 1.1765784306188765,
+          "boundary_tie_n": 2474,
+          "random_ties_1000_mean_precision": 0.9041955509570616
+        }
+      ]
+    },
+    "changed_train_users": 0,
+    "changed_test_users": 14
+  },
+  "source_sha256": {
+    "data/sample/session_events.parquet": "3e1e0823507206ff2141a6a6ec2533712472cfe49a544fd10bed7a1151b76963",
+    "data/sample/user_features_v2.parquet": "4fd6963b4e7b8921d3ea893fea3919869093d294a9bd6510f679d446d2b1fe54",
+    "data/sample/churn_model_v2.pkl": "147a033481eed4094a58f66e2e5276f2a791b9dc48cd24fbf98c2defd15fa5ce",
+    "notebooks/01_data_quality.recovered.ipynb": "8683977504b3f41a26957eb1a34b6ab1d2a5fdba9cc7cae59adc6adb6c99304d",
+    "validation/validate_15_feature_model.py": "037aef02559ea22478d6b4b65cc39196f0f7a6ca19f951682866847b2a9eb943",
+    "validation/metrics.json": "ee5a6b9bcf14ecf0f0a5ecc5ee08777046c5afbbe627dfc95689126453f5d720"
+  },
+  "protected_files_unchanged": true,
+  "script_sha256": "041a37b1a2600bcc7326d4c5af04701fd6a71cd6ff7538d09a45c64f93bb489d",
+  "environment": {
+    "python": "3.12.14",
+    "duckdb": "1.5.6",
+    "sklearn": "1.9.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6"
+  },
+  "ranking": "K=floor(N*fraction); RF boundary ties use exact random-tie expectation; rule uses exact expectation plus seeded 1000-repeat mean.",
+  "limitations": [
+    "Historical sampled population selected using user IDs across all seven months: conditional backtest, not fully point-in-time population sampling.",
+    "Training label interval overlaps later feature interval, but all training labels mature at test cutoff; no late outcome enters fit.",
+    "Original observation period 152 days vs 92 here; original March-April target 61 days vs exact 60 here.",
+    "Single period, no untouched model-selection holdout; fixed parameters were previously chosen on related data.",
+    "Absence of recorded purchase means observed churn, not verified account closure; no data beyond April."
+  ]
+}

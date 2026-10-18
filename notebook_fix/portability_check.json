@@ -1,0 +1,12 @@
+{
+  "portable_root_cold_passed": true,
+  "portable_notebooks_warm_passed": true,
+  "same_9428_rows": true,
+  "all_15_reference_inputs_match": true,
+  "wrong_session_regression_blocked": true,
+  "notebook_outputs_cleared": true,
+  "logs": {
+    "root_cold": "已从 session_events.parquet 按需重建并缓存\nuser_features: (9428, 17)\nchurn\n0    1770\n1    7658\nName: count, dtype: int64\n15个模型输入与已保存特征缓存一致（按 user_id 核对）。\n近期会话口径：rebuilt_session；user_features_v2: (9428, 21)\n",
+    "notebooks_warm": "已读取用户特征缓存\nuser_features: (9428, 17)\nchurn\n0    1770\n1    7658\nName: count, dtype: int64\n15个模型输入与已保存特征缓存一致（按 user_id 核对）。\n近期会话口径：rebuilt_session；user_features_v2: (9428, 21)\n"
+  }
+}

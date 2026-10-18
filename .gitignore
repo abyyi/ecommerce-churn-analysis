@@ -1,0 +1,25 @@
+# Local datasets, sampled features and trained artifacts
+data/
+*.pkl
+*.pickle
+*.parquet
+
+# Local environments and generated rerun results
+.venv*/
+venv/
+validation/results/
+validation_results/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Historical local scratch files; publish only the cleaned recovery notebook
+notebooks/01_data_quality.ipynb
+notebooks/:Users:*
+
+# Preserve completed temporal metrics; ignore future rerun directories
+validation/temporal_validation/new_results*/
