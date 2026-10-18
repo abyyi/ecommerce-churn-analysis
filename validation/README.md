@@ -1,10 +1,10 @@
-# Candidate Model Reproduction
+# Model Evaluation and Reproduction
 
-This package reconstructs the historical random test split, retrains the saved 15-feature Random Forest, compares it with the trusted local saved artifact, rebuilds features from session-event data, and exports evaluation at thresholds 0.50 and 0.70. It does not create a new untouched holdout or rerun raw CSV preparation.
+## Historical Random Forest
 
-## Run
+`validate_15_feature_model.py` reconstructs the historical random-user split, trains the 15-feature candidate, compares it with the trusted saved model, rebuilds inputs from session events and reports threshold metrics.
 
-Use Python 3.12.14 and the supplied dependency versions. From the repository root after copying this folder into `validation/`:
+Use Python 3.12.14 and the pinned packages. From the repository root:
 
 ```sh
 python3 -m venv .venv-validation
@@ -14,24 +14,26 @@ python3 -m venv .venv-validation
   --output-dir validation/results
 ```
 
-Required existing files under the project root:
+Local inputs:
 
-- `data/sample/user_features_v2.parquet`
 - `data/sample/session_events.parquet`
+- `data/sample/user_features_v2.parquet`
 - `data/sample/churn_model_v2.pkl`
 
-Only load a pickle from a trusted source. The script leaves these inputs unchanged. The verified run used the original local project inputs; their hashes are in `metrics.json`.
+These files are excluded from Git. Load only trusted model pickles. The script uses the original feature-table row order, 80/20 stratification and seed 42. Changing input data or row order can change the split and correctly fail its assertions.
 
-Assertions check feature schema, class encoding, candidate threshold, cohort counts, non-overlapping splits, exact saved-tree reproduction, numerical probability agreement, event-cache feature reconstruction and label reconstruction. Changed inputs can legitimately cause an assertion to fail; investigate rather than relaxing the checks to match a score.
+Checks cover the ordered feature schema, class encoding, cohort counts, split separation, saved-tree equality, probability agreement and event-to-feature/label consistency. Only undefined `cart_rate` and `purchase_rate` values are filled with zero; no learned imputation, scaling or log transform is used.
 
-Output: `metrics.json`, with feature order, full estimator settings, preprocessing, versions, source hashes, split hashes, two threshold evaluations and a matched majority baseline. No user-level predictions or user IDs are included in this package.
+The output `metrics.json` includes full-precision scores at 0.50 and 0.70, class metrics, confusion matrices, ranking discrimination, Brier score, matched all-churn baseline, environment versions and input hashes. [metrics.json](metrics.json) contains the reference run, and [validation_summary.md](validation_summary.md) explains the results. Use a separate output directory for reruns.
 
-See [validation_summary.md](validation_summary.md) for the completed run. The earlier source-session definition in the recovery notebook was inconsistent with the model cache. Both the corrected original notebook and this script now use `rebuilt_session` for recent sessions, as confirmed by event-level reconstruction. See [the fix record](../notebook_fix/README.md).
+## Ranking and calibration
 
+[Ranking/calibration analysis](ranking_calibration/README.md) uses the same historical test set for top-K selection, a seeded browsing-rule baseline and a 10-bin calibration plot. The analysis is organized as notebook cells and requires the notebook namespace and additional plotting dependencies; it is not the standalone validation command above.
 
-## Additional completed checks integrated on 18 October
+## Temporal backtest
 
-- [Historical ranking/calibration evidence](ranking_calibration/README.md): original historical source cells, posted top-K/rule outputs and chart recovered from the source conversation, with no calculations repeated.
-- [Fixed temporal backtest](temporal_validation/README.md): preserved standalone script and completed results, separate from the historical reproduction above. The report update did not execute either training script.
+The [temporal evaluation](temporal_validation/README.md) fits an earlier-period model with fixed settings and evaluates a later cohort. Its outcome window ends on 30 April exclusive; the historical random-user evaluation ends on 1 May exclusive. The resulting cohorts, prevalence and time windows are not interchangeable.
 
-The temporal script's label window ends at 30 April exclusive, whereas the original reproduction ends at 1 May exclusive; do not combine their prevalence or interpret score changes as a controlled time-drift comparison.
+## Interpretation
+
+The historical test set was examined during model development; reproducibility is not an independent generalization estimate. The temporal design provides one later-period check on related historical data. Additional untouched evaluation is needed for stronger deployment claims. Neither diagnostic estimates campaign impact.

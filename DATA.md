@@ -1,8 +1,8 @@
-# Data and Local Artifacts
+# Data Requirements
 
 ## Source and scope
 
-The project uses the REES46 event dataset covering October 2019–April 2020. The original local project contains these source filenames:
+The project uses the REES46 event dataset covering October 2019–April 2020. The monthly input files are:
 
 ```text
 2019-Oct.csv.gz
@@ -14,11 +14,11 @@ The project uses the REES46 event dataset covering October 2019–April 2020. Th
 2020-Apr.csv.gz
 ```
 
-The precise distribution/download page and its redistribution terms were not independently verified in this handoff. No source URL or dataset license is asserted here. Obtain the matching files through an authorized source and document that source before a full raw-data rebuild. Raw files, sampled event records and trained models are excluded from this repository.
+An exact distribution URL and dataset license are not specified in this repository. Obtain the matching files from an authorized source and check its access and redistribution terms. Raw files, sampled event records and trained models are excluded from this repository.
 
 ## Sampling and windows
 
-The inspected notebook selects 100,000 distinct users by ordering `hash(user_id)` across the seven-month extract, then retains those users' events. The session cache contains 2,635,748 events. Sessions are numbered within each user: the first event starts a session, and a gap greater than 30 minutes starts another. Preserve user IDs, event ordering and the preparation environment for exact reconstruction; tied timestamps and hash implementation versions can affect reproducibility.
+The sampling procedure selects 100,000 distinct users by ordering `hash(user_id)` across the seven-month extract, then retains those users' events. The session cache contains 2,635,748 events. Sessions are numbered within each user: the first event starts a session, and a gap greater than 30 minutes starts another. Preserve user IDs, event ordering and the preparation environment for exact reconstruction; tied timestamps and hash implementation versions can affect reproducibility.
 
 Eligibility: at least one purchase before 1 March 2020. Feature window: 1 October 2019–1 March 2020 exclusive. Recent window: 31 January–1 March 2020 exclusive. Outcome window: 1 March–1 May 2020 exclusive. No purchase in the outcome window means churn.
 
@@ -36,11 +36,11 @@ The recovery notebook can restore candidate features from the session cache; a h
 
 ## What is not included
 
-The repository provides code, aggregate metrics and reports, not raw data, sampled customer records, model binaries, or a tested raw-to-model release pipeline. Earlier raw-data preparation cells remain in the exploratory notebook as a historical record. They were not rerun for this handoff, and should not be confused with the tested two-cell recovery entry point. There is no verified one-command download or raw CSV rebuild supplied here.
+The repository provides code, aggregate metrics and reports, not raw data, sampled customer records, model binaries, or a tested raw-to-model release pipeline. Raw-data preparation cells are available in the exploratory notebook, but the verified evaluation begins with the sampled event Parquet. A one-command raw-to-model rebuild is not provided.
 
 
-## Separate completed temporal backtest
+## Temporal evaluation
 
 The temporal backtest uses earlier and later 92-day feature windows, each with exactly 60-day no-purchase targets. The later target is [2020-03-01, 2020-04-30), excluding all of 30 April. This is not interchangeable with the original [2020-03-01, 2020-05-01) target. Cohort sizes and prevalence differ. See [the temporal design record](reports/temporal_validation/temporal_validation_addendum_en.md).
 
-The temporal event audit also identified 196 cached session-boundary inconsistencies. An already completed in-memory, tie-invariant reconstruction changed 14 later users' feature rows without changing top-K summaries. These are diagnostic findings; original cached events/features and saved models remain unchanged.
+The temporal event audit also identified 196 cached session-boundary inconsistencies. An in-memory, tie-invariant reconstruction changed 14 later users' feature rows without changing top-K summaries. The main temporal result uses the cached session identifiers; the alternative reconstruction is a sensitivity check.

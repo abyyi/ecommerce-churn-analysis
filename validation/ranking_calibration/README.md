@@ -1,16 +1,23 @@
-# Historical Ranking and Calibration: Recovered Evidence
+# Risk Ranking and Probability Calibration
 
-The original source cells, user-posted result tables and calibration-chart attachment were recovered directly from the **项目开发** conversation on 18 October 2026. These analyses had been completed there; the earlier local-file-only review had not located their original evidence. The saved local recovery notebook still had 99 cells and did not contain these extra ranking/calibration cells at the time of inspection. The conversation does not establish whether an expanded notebook was saved elsewhere or remained open/unsaved in the editor.
+These analyses evaluate the 15-feature Random Forest on the historical 1,886-user test set. The observed churn rate is 81.23% when rounded.
 
-## Archived materials
+## Risk-screening method
 
-- [conversation_cells.py](conversation_cells.py): source cells extracted verbatim, in analysis order, including model loading, original test split, RF ranking, the initial rule, its final 1,000-repeat tie correction, and calibration plotting. **Not a standalone pipeline:** the original code assumes the notebook namespace and notebook working directory. The initial stable rule is superseded by the randomized-tie cell.
-- [conversation_evidence.json](conversation_evidence.json): source turn identifiers, exact code blocks and user-posted RF/final-rule tables. Unrelated personal conversation content is excluded.
-- [reference_results.json](reference_results.json): rounded figures with corrected provenance.
-- [Original calibration chart](../../reports/figures/probability_calibration_original.png), copied unchanged, and [image provenance](calibration_image_provenance.json).
+[ranking_calibration_cells.py](ranking_calibration_cells.py) contains notebook-style cells for loading the model, reconstructing the stratified random test split, ranking predicted probabilities, comparing a browsing baseline and plotting calibration. Run them in order from the project `notebooks/` directory with `user_features_v2` already available in the notebook namespace. The cells require NumPy, pandas, scikit-learn, Matplotlib and notebook display. Matplotlib is an additional plotting dependency outside the pinned standalone-validation environment.
 
-The recovered code establishes seed **42** for the browsing-rule randomized tie comparisons, using 1,000 permutations per fraction with `np.lexsort`. RF ranking sorts original model probability descending; K is `int(N * fraction)`. The user-posted final table includes rule mean precision 0.9314/0.9304/0.9302 and rule mean lift 1.1466/1.1454/1.1452.
+Model probabilities are sorted descending; K is `int(N * fraction)` for fractions 0.10, 0.20 and 0.30. The baseline sorts `recent_30d_views` ascending, resolving equal view counts with `np.random.default_rng(42)` and 1,000 random permutations per fraction. The reported baseline precision is the mean across these permutations. User IDs are used for association only, not as model features.
 
-The calibration code uses `calibration_curve(..., n_bins=10, strategy="quantile")`, and the original chart shows plotted points broadly near the diagonal, with visible deviations. Original [metrics](../metrics.json) record Brier score 0.1275096330. No extra calibration was applied, optimal calibration is not established, and a raw bin table was not recovered.
+| Fraction | K | RF precision | RF lift | Baseline mean precision |
+|---|---:|---:|---:|---:|
+| 10% | 188 | 0.9734 | 1.1983 | 0.9314 |
+| 20% | 377 | 0.9655 | 1.1886 | 0.9304 |
+| 30% | 565 | 0.9593 | 1.1810 | 0.9302 |
 
-**Recovery is not recomputation:** no model was loaded, trained, scored, reranked or recalibrated in this evidence-recovery task. The original verified recovery notebook, model/data caches and evaluation scripts/results remain untouched. The [temporal script](../temporal_validation/validate_temporal.py) is a separate previously completed backtest.
+The values in [reference_results.json](reference_results.json) are rounded summary statistics; they are not user-level prediction outputs. The standalone reproduction script reports threshold metrics and does not export this top-K table. The cell-oriented analysis is a separate entry point.
+
+## Probability calibration
+
+The Brier score is 0.1275. The [calibration curve](../../reports/figures/calibration_curve.png) uses 10 quantile bins; its settings appear in [calibration_config.json](calibration_config.json). No additional probability calibration is applied. A near-diagonal curve is a diagnostic, not proof of optimal or time-stable calibration. Raw per-bin arrays are not included.
+
+These diagnostics reuse the development test set. They do not provide an independent holdout estimate or quantify incremental campaign benefit. See the [main report](../../reports/churn_analysis_report.md) and [temporal evaluation](../temporal_validation/README.md) for interpretation and limitations.

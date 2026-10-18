@@ -1,6 +1,6 @@
-# Fixed Temporal Backtest — Completed Result
+# Temporal Validation
 
-This directory preserves the already completed backtest. The report-integration task did **not** execute this script, refit any model, regenerate probabilities or rerun validation. The script and [results/metrics.json](results/metrics.json) are unchanged.
+`validate_temporal.py` evaluates a fixed earlier/later model design and a tie-invariant session sensitivity variant. Reference outputs are available in [results/metrics.json](results/metrics.json).
 
 ## Design and inputs
 
@@ -8,7 +8,7 @@ Earlier features [2019-10-01, 2020-01-01), labels [2020-01-01, 2020-03-01); late
 
 The script requires existing private local files: `data/sample/session_events.parquet`, `data/sample/user_features_v2.parquet`, `data/sample/churn_model_v2.pkl`, `notebooks/01_data_quality.recovered.ipynb`, `validation/validate_15_feature_model.py` and `validation/metrics.json`. Only the event Parquet is used to fit this backtest; the other artifacts are included in before/after integrity checks. None of these private data/model inputs is redistributed here.
 
-## Instructions for a future explicitly requested rerun
+## Run
 
 Use Python 3.12.14 and `validation/requirements.txt`. From the repository root, after setting up the environment described in the main README:
 
@@ -18,7 +18,7 @@ Use Python 3.12.14 and `validation/requirements.txt`. From the repository root, 
   --output-dir validation/temporal_validation/new_results
 ```
 
-**Running this command fits earlier-period Random Forest models, including a session-sensitivity fit.** It should not be run merely to update the documentation. The output directory must not already exist. Preserve the completed `results/metrics.json`; new rerun directories matching `new_results*` are ignored by Git. Before/after protected-file hashes must match within that run; no input file is overwritten. The fixed reference results remain tied to their recorded historical hashes, so a legitimately edited non-data artifact can have a different hash in a later run without changing the historical result.
+The command fits earlier-period Random Forest models, including a session-sensitivity fit. The output directory must not already exist. Preserve the completed `results/metrics.json`; new rerun directories matching `new_results*` are ignored by Git. Before/after protected-file hashes must match within that run; no input file is overwritten. Input hashes identify each execution snapshot; the output records the environment and protected-file integrity checks.
 
 ## Recorded outputs and limits
 

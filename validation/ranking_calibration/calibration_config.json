@@ -1,0 +1,8 @@
+{
+  "method": "Calibration curve for historical test predictions",
+  "n_bins": 10,
+  "strategy": "quantile",
+  "additional_calibration_applied": false,
+  "brier_score": 0.1275,
+  "figure": "reports/figures/calibration_curve.png"
+}

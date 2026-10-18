@@ -1,73 +1,44 @@
-# Reproducibility Audit
+# Reproducibility and Data Quality
 
-Review date: 15 October 2026.
+## Evaluation scope
 
-## Scope
+The standalone evaluation starts from sampled session events and a user-feature table. It verifies the 15-feature candidate and a fixed temporal design. It does not include automatic dataset download, a complete seven-month raw-CSV rebuild, or sequential execution of every exploratory notebook cell.
 
-Read-only review of the local `ecommerce-churn-analysis` project. The original recovery notebook was subsequently corrected in place; data files and model artifacts were not changed. This report package is a standalone handoff for placement in the repository's `reports/` directory.
+| Input property | Value |
+|---|---:|
+| Sampled event rows | 2,635,748 |
+| Sampled users | 100,000 |
+| Historical eligible users | 9,428 |
+| Historical churned users | 7,658 |
+| Historical retained users | 1,770 |
+| Spending median used for segmentation | 313.78 |
 
-Reviewed: `notebooks/01_data_quality.ipynb`, `notebooks/01_data_quality.recovered.ipynb`, `data/sample/session_events.parquet`, and `data/sample/user_features_v2.parquet`. The raw monthly files, recovery cache and model pickle were inventoried; raw data were not rescanned and the trusted local pickle was subsequently loaded for the candidate reproduction described below.
+The event timestamps span 2019-10-01 00:05:36 to 2020-04-30 23:59:56. [Historical metrics](../validation/metrics.json) and [temporal metrics](../validation/temporal_validation/results/metrics.json) preserve environment versions, input hashes and full-precision results. Source hashes identify the versions used for each recorded run; documentation or comment-only edits may have different current hashes without changing the recorded numerical results.
 
-## Independently checked against Parquet caches
+## Historical candidate checks
 
-Queries used DuckDB 1.5.6 from an existing local dependency directory.
+- Stratified 80/20 user split on the reference feature row order, seed 42: 7,542 training and 1,886 test users.
+- Exact ordered 15-feature schema; undefined view-denominator ratios replaced with zero, with no-view indicator retained. No scaling or log transform.
+- Fresh candidate training matches all 200 reference tree node/value arrays. Probability differences are below 1e-14; predictions at threshold 0.70 agree exactly.
+- All 15 inputs and churn labels reconstructed from session events match the reference feature table, with numerical tolerance for floating-point sums.
+- Accuracy 0.7900, macro F1 0.6637 and ROC AUC 0.7808 on the historical test split.
 
-| Check | Result |
-|---|---|
-| Session-event rows | 2,635,748 |
-| Distinct sampled users | 100,000 |
-| Minimum event timestamp | 2019-10-01 00:05:36 |
-| Maximum event timestamp | 2020-04-30 23:59:56 |
-| Feature-cache rows / distinct users | 9,428 / 9,428 |
-| Cached churn-label sum | 7,658 |
-| Eligible users recomputed from historical purchase events | 9,428 |
-| Churn recomputed using March–April purchase events | 7,658 |
-| Cohort spending median | 313.78 |
-| Profile medians by outcome | Match every supplied value to displayed precision |
-| Four activity/value segment summaries | Match every supplied count, churn rate and median |
-| Recent browsing group | 4,712 users; 3,278 churned; 69.57% |
-| No recent browsing group | 4,716 users; 4,380 churned; 92.88% |
+Only the 15-feature candidate has this complete reproduction record. The 11- and 18-feature scores are exploratory benchmark summaries. The test set was examined repeatedly during development, so reproduction does not establish an independent generalization estimate.
 
-The cohort and churn counts were recomputed from event data independently of the feature table. Profile and segment statistics were recomputed from the existing feature cache; the follow-up validation rebuilt all 15 model inputs and labels from session events and matched them to the feature cache. A raw-CSV-to-cache integrity audit was not performed.
+## Sessions and temporal sensitivity
 
-## Follow-up candidate reproduction
+Historical and recent session features count distinct `rebuilt_session` within each user. Source `user_session` is not an interchangeable identifier. Cached feature-loading checks enforce consistent session counts, unique users and reference-input alignment.
 
-The trusted saved pickle was loaded with scikit-learn 1.9.1. Its exact feature list, hyperparameters and threshold were recovered. A separately exported earlier analysis script under `notebooks/` documents an 80/20 stratified random split with seed 42 and zero-filling of missing event ratios. Applying that split to the original feature-cache row order yields 7,542 training and 1,886 test users.
+An event-level audit identifies 196 cached session-boundary inconsistencies involving tied timestamps. The main temporal evaluation retains the cached identifiers. A tie-invariant reconstruction changes no earlier-cohort feature rows and 14 later-cohort rows; AUC changes from 0.735123 to 0.735184 and macro F1 from 0.637431 to 0.637226. The three top-K results remain identical. Cache alignment therefore supports consistency, but does not establish perfect strict-30-minute session reconstruction.
 
-Fresh training reproduces all 200 saved trees' node/value arrays exactly. All-user predicted probabilities agree within 1e-14; threshold-0.70 test classifications agree exactly. Differences at about 1e-16 come from floating-point accumulation and do not affect the reproduced scores.
+## Diagnostic analysis
 
-All 15 features were independently rebuilt from `session_events.parquet` and matched to the model cache by user ID (floating tolerance 1e-8 absolute / 1e-10 relative). Labels also match. Rebuilt-feature scores agree within 1e-14. Model, feature-cache and event-cache SHA-256 hashes, environment versions and reconstructed split-user hashes are recorded in [metrics.json](../validation/metrics.json).
+[Ranking and calibration methods](../validation/ranking_calibration/README.md) describe probability-based selection, a seeded 1,000-repeat tie-aware browsing baseline, and 10-quantile-bin calibration. Summary ranking values are rounded; user-level predictions and raw calibration-bin arrays are not distributed. The Brier score is 0.1275, and no additional calibration is applied. These are development-test diagnostics, not an independent validation of calibration or campaign responsiveness.
 
-**Session-definition finding:** cached `recent_30d_sessions` exactly matches distinct per-user `rebuilt_session` counts in the recent window. Counting source `user_session` instead differs for 2,468 eligible users. The recovered notebook previously used that conflicting source-session definition. Its original project file has now been corrected to use reconstructed sessions and validate event-level counts plus all 15 cached inputs. Cold-cache, warm-cache, repeat execution and deliberate wrong-session regression checks passed. The actual original-path recovery cells were also run successfully; see [the fix record](../notebook_fix/README.md).
+## Temporal design and limits
 
-The candidate's threshold-0.70 accuracy 0.7900, macro F1 0.6637 and AUC 0.7808 reproduce the supplied results. Full results, error tradeoffs and execution instructions appear in [the validation summary](../validation/validation_summary.md).
+The fixed temporal pair uses 92-day observation and 60-day outcome windows, with 6,717 earlier training users and 6,445 later test users. All earlier labels mature by the later scoring cutoff. Later outcomes are not used for fitting, parameter search, threshold selection or probability calibration.
 
-## Remaining limitations
+The later cohort includes 3,734 training-cohort customers and 2,711 unseen customers. Sampling across the full seven-month population introduces retrospective population-selection dependence. The model specification was developed on related historical data, so this is not an untouched final model-selection holdout. The original random test uses different window lengths, eligibility and prevalence; score differences cannot be attributed solely to time drift.
 
-- The 96-cell original notebook and 99-cell recovered notebook were inspected, but not run end to end. The recovery entry point was subsequently made portable and tested from the repository root and notebook directory. Historical exploratory cells still have working-directory and state assumptions; optional notebook installation steps remain outside standalone validation.
-- Historical features precede 1 March 2020. The original label SQL omits the 1 May upper bound; the validation script supplies explicit outcome-window bounds.
-- Original train/test user-ID manifests were unavailable. The reconstructed split is strongly corroborated by exact saved-tree reproduction; it is not a newly untouched holdout.
-- Repeated historical test inspection remains a generalization limitation even after successful numerical reproduction.
-- The 11- and 18-feature experiments were not retrained or independently verified.
-- Seven raw monthly files were not rescanned, and sampling/session reconstruction from those CSV files was not repeated.
-- The original calibration chart and source plotting cells were subsequently recovered from the source conversation; no additional calibration was applied. Original Brier score is available. No optimal-calibration, economic-threshold or campaign-effect claim follows.
-
-## Reproduction artifacts
-
-Use [the validation README](../validation/README.md) for the standalone script, pinned dependencies and metrics. The recovery notebook was updated; existing source data/model files were left unchanged. A completed single temporal backtest is now integrated; further independent temporal windows, an untouched final holdout and randomized marketing experiments remain future work.
-
-## Repository preparation — 18 October 2026
-
-The repository includes a project README, data notes, pinned standalone-validation dependencies, aggregate results and a cleaned recovery notebook. Personal absolute paths and saved notebook outputs were removed from the upload version. Its two recovery cells passed cold-cache execution from a separate repository root and warm-cache execution from `notebooks/`, and wrong-session regression was blocked. Candidate validation was rerun successfully against the original local inputs, reproducing the same 0.70 confusion matrix and reported metrics. The [portability evidence](../notebook_fix/portability_check.json) records these checks. No remote publication was performed.
-
-
-## Completed-result integration — 18 October 2026
-
-The latest document update read the existing temporal script, metrics and bilingual addenda without running them. Historical top-K/rule results were initially transcribed from the owner's handoff. The original source cells, user-posted tables and chart attachment have since been recovered directly from the 项目开发 conversation and preserved in [the evidence archive](../validation/ranking_calibration/README.md); a raw calibration bin table remains unavailable. The existing Brier value supports 0.1275, but not optimal calibration. The temporal JSON independently supports the integrated windows, 6,717/6,445 cohort sizes, AUC 0.7351, macro F1 0.6374 and later top-K/rule comparison.
-
-The temporal audit records 196 cached event-level session-boundary inconsistencies, distinct from the recovery field mismatch. Its already completed tie-invariant sensitivity run changed 14 later-user feature rows; top-K results stayed the same and AUC/F1 were nearly unchanged. Cache agreement guards remain useful, but do not certify strict raw-session correctness. No source data, saved model, verified notebook, original reproduction script/metrics or temporal script/metrics was edited in this integration. Only documentation, a provenance transcription, ignore rules and the upload manifest were updated or added.
-
-
-## Source-conversation evidence recovery — 18 October 2026
-
-Direct inspection of the 项目开发 conversation found original RF ranking cells and their posted table, the seed-42 rule tie-resolution cells and final posted table, the quantile-bin calibration plotting cells, and the original calibration image attachment. The earlier local-file search was incomplete as a provenance check; absence from the saved 99-cell recovery notebook was not evidence that the analyses had not been performed. Exact extracted cells and output tables, relevant source-turn identifiers and the unchanged chart are now bundled. We did not establish where an expanded notebook was saved or whether it remained in editor memory. No analysis code was executed during recovery and no verified model/data artifact was changed.
+See the [temporal design report](temporal_validation/temporal_validation_addendum_en.md) for subgroup results, sensitivity and interpretation. Additional periods, a final untouched holdout and randomized intervention experiments remain necessary before stronger deployment or business-effect claims.

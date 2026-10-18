@@ -39,7 +39,7 @@ The baseline ranks customers by ascending recent 30-day view count. Its precisio
 
 ## Probability calibration
 
-The Brier score is **0.1275**. The [calibration curve](reports/figures/probability_calibration_original.png), based on 10 quantile bins, broadly follows the ideal diagonal, with some deviations. No additional probability calibration was applied. This check does not establish optimal calibration or reliability in future periods.
+The Brier score is **0.1275**. The [calibration curve](reports/figures/calibration_curve.png), based on 10 quantile bins, broadly follows the ideal diagonal, with some deviations. No additional probability calibration was applied. This check does not establish optimal calibration or reliability in future periods.
 
 ## Temporal validation
 
@@ -61,7 +61,6 @@ The temporal design uses 92-day observation and 60-day outcome windows; the orig
 | `notebooks/` | Exploratory analysis and cached-feature recovery |
 | `reports/` | Analysis report, calibration chart and temporal findings |
 | `validation/` | Reproduction scripts, evaluation results and dependencies |
-| `notebook_fix/` | Supporting consistency checks |
 | `DATA.md` | Data scope and required local inputs |
 
 ## Reproduce the model evaluation

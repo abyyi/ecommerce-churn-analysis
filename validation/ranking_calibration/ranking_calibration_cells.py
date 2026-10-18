@@ -1,13 +1,12 @@
-"""Recovered historical notebook cells from the 项目开发 conversation.
-Archive only: not a standalone command-line pipeline. Not executed on recovery.
-Requires the original notebook namespace (including user_features_v2), pandas,
-NumPy, scikit-learn, Matplotlib and notebook display. Original relative paths
-assume the project notebooks/ working directory. Load only a trusted pickle.
-The first rule comparison is historical and superseded by the random-tie cell.
+"""Notebook cells for churn-risk ranking, a tie-aware browsing baseline,
+and probability-calibration diagnostics.
+
+Run the cells in order from the project notebooks/ directory after loading
+user_features_v2 with the exploratory notebook. Requires NumPy, pandas,
+scikit-learn, Matplotlib and notebook display. This is a cell-oriented analysis,
+not a standalone command-line program. Load only a trusted model pickle.
 """
-
-
-# %% model_load | source turn: ddf572e8-378d-466d-88c5-407d607f4118
+# %% model_load
 import pickle
 import numpy as np
 import pandas as pd
@@ -23,7 +22,8 @@ print("模型特征数量：", len(features))
 print("预测阈值：", saved["threshold"])
 
 
-# %% test_split | source turn: d841caee-e623-4c49-893b-66308ce42217
+
+# %% test_split
 from sklearn.model_selection import train_test_split
 
 # 使用模型原来的15个特征
@@ -45,7 +45,8 @@ print("测试用户数量：", len(X_test))
 print("测试集流失率：", round(y_test.mean() * 100, 2), "%")
 
 
-# %% ranking | source turn: ee0b1a75-589e-4709-bfcb-64b2d476fce7
+
+# %% ranking
 # 整理测试集预测结果
 risk_results = pd.DataFrame({
     "user_id": user_features_v2.loc[X_test.index, "user_id"].values,
@@ -82,45 +83,8 @@ lift_table = pd.DataFrame(results)
 display(lift_table)
 
 
-# %% rule_initial | source turn: ce8b83b5-50a5-425c-bc47-78f19befb0df
-# 给测试集添加最近30天的浏览次数
-rule_results = pd.DataFrame({
-    "actual_churn": y_test.values,
-    "recent_30d_views": X_test["recent_30d_views"].values
-})
 
-# 浏览次数越少，流失风险越高
-rule_results = rule_results.sort_values(
-    "recent_30d_views",
-    ascending=True,
-    kind="stable"
-).reset_index(drop=True)
-
-# 计算简单规则的 Precision@K 和 Lift@K
-rule_metrics = []
-
-for pct in [0.1, 0.2, 0.3]:
-    k = int(len(rule_results) * pct)
-    top_k = rule_results.head(k)
-
-    precision = top_k["actual_churn"].mean()
-    lift = precision / baseline_rate
-
-    rule_metrics.append({
-        "Top %": f"{int(pct * 100)}%",
-        "Rule Precision@K": round(precision, 4),
-        "Rule Lift@K": round(lift, 4)
-    })
-
-rule_table = pd.DataFrame(rule_metrics)
-
-# 与随机森林比较
-comparison = lift_table.merge(rule_table, on="Top %")
-
-display(comparison)
-
-
-# %% rule_random_ties | source turn: b40d7355-93c4-4c47-9ae5-264af903f906
+# %% rule_random_ties
 # 对简单规则中的并列用户随机排序，重复1000次
 rng = np.random.default_rng(42)
 
@@ -162,7 +126,8 @@ fair_comparison = pd.DataFrame(rule_results_avg)
 display(fair_comparison)
 
 
-# %% calibration | source turn: 4e846772-b697-46d0-a815-004d69c9d5f5
+
+# %% calibration
 import matplotlib.pyplot as plt
 from sklearn.calibration import calibration_curve
 from sklearn.metrics import brier_score_loss
@@ -192,4 +157,5 @@ plt.show()
 
 # Brier Score：越低越好
 print("Brier Score:", round(brier_score_loss(y_test, y_prob), 4))
+
 

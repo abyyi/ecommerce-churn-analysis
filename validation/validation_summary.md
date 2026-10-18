@@ -1,8 +1,8 @@
 # 15-Feature Random Forest: Reproduction Results
 
-**Completed:** 15 October 2026. **Outcome:** the candidate's historical results were reproduced.
+Reference evaluation of the 15-feature candidate on the historical stratified random-user split.
 
-## What was verified
+## Reproduction checks
 
 - Loaded the trusted saved model; confirmed 15 ordered features, 200 trees, maximum depth 5, minimum leaf size 20, seed 42, no class weights, `n_jobs=-1`, and saved threshold 0.70.
 - Reconstructed the earlier documented stratified 80/20 random split on the feature-cache row order. Training: 7,542 users. Test: 1,886 users, comprising 354 retained and 1,532 churned users.
@@ -10,7 +10,7 @@
 - Retrained from scratch. Every saved tree's node/value arrays matched exactly. Predicted probabilities on all 9,428 users agreed within 1e-14; test classifications at 0.70 matched exactly.
 - Rebuilt all 15 features and the target from session events with explicit historical/outcome bounds. All matched cached values by user ID, allowing floating-point tolerance for arithmetic. Rebuilt-feature probabilities agreed within 1e-14.
 
-The original candidate accuracy, macro F1 and AUC round to 0.7900, 0.6637 and 0.7808, respectively. This confirms that the supplied 15-feature accuracy and macro F1 correspond to threshold 0.70.
+The original candidate accuracy, macro F1 and AUC round to 0.7900, 0.6637 and 0.7808, respectively. Accuracy and macro F1 in this evaluation use threshold 0.70.
 
 ## Threshold comparison
 
@@ -41,9 +41,9 @@ Rows are actual labels; columns are predicted labels. Churn is positive class 1.
 
 Raising the threshold reduces false churn alarms by 120 but misses 178 additional churn cases. It improves macro F1 and retained recall while reducing accuracy and churn recall. No marketing cost/benefit data establish 0.70 as economically optimal.
 
-## Session-definition discrepancy
+## Session features
 
-The candidate cache counts distinct reconstructed sessions (`rebuilt_session`) per user during the recent 30-day window. This matches event-level reconstruction for all 9,428 users. The recovery notebook previously counted source `user_session` IDs, differing for 2,468 eligible users. The original recovery notebook has since been corrected and its recovery cells successfully executed, with safeguards against repeating this discrepancy. The validation script and corrected notebook both use the verified reconstructed-session definition; see [the fix record](../notebook_fix/README.md).
+Historical and recent sessions use per-user `rebuilt_session` counts. Feature checks compare the 15 candidate inputs against the reference table and independently aggregate them from session events. Source `user_session` uses a different convention and is not substituted. The [reproducibility notes](../reports/reproducibility_audit.md) describe the cached boundary audit and temporal sensitivity.
 
 ## Limits of this verification
 
@@ -52,6 +52,7 @@ The exact saved-tree match strongly corroborates the reconstructed historical sp
 See [metrics.json](metrics.json) for full precision metrics, source hashes, split hashes and environment versions, and [README.md](README.md) for rerun instructions.
 
 
-## Later completed analyses — integration note
 
-The reproduction results above remain unchanged. The main report now incorporates the [conversation-recovered historical ranking and calibration evidence](ranking_calibration/README.md) and a separately completed [fixed temporal backtest](temporal_validation/README.md). The latter provides later-period evidence within this sampled population, not a new untouched model-selection holdout. No additional fitting or validation was performed during this documentation integration.
+## Related diagnostics
+
+See [risk ranking and calibration](ranking_calibration/README.md) for top-K screening, baseline tie handling and probability diagnostics. The [temporal evaluation](temporal_validation/README.md) provides a separate fixed earlier/later pair with different observation and label lengths; it is not an untouched final model-selection holdout.

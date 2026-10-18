@@ -1,4 +1,4 @@
-# Temporal validation addendum — 18 October 2026
+# Temporal Validation: Design and Results
 
 A fixed Random Forest trained at 1 January 2020 and evaluated at 1 March 2020 achieved ROC-AUC **0.735123** and Macro F1 **0.637431** at the pre-existing 0.7 threshold. This supports useful later-period ranking within this historical sample, not proven temporal robustness or optimal calibration.
 
@@ -22,7 +22,6 @@ The original random-user test AUC 0.780782 and Macro F1 0.663678 are contextual 
 
 Users were originally sampled by hashed IDs across the entire seven-month population, which creates full-period population-selection dependence. This is a conditional retrospective backtest without late-label leakage, not a fully point-in-time population-sampling study. The model specification was previously developed using related historical data; this is not an untouched model-selection holdout. No claims of permanent customer departure, cross-year stability, or pandemic causality follow.
 
-See the independent script and metrics under validation/temporal_validation/. Input hashes, versions, monthly counts, subgroup results, and session sensitivity are recorded in metrics.json. Original event data, feature cache, saved model, recovery notebook, reproduction script and historical metrics were unchanged by SHA256 comparison. The main English report now integrates these findings in Section 5.7. This addendum remains the detailed design and provenance record; the existing script and metric outputs have not been changed. No GitHub publication was performed.
+The [temporal script](../../validation/temporal_validation/validate_temporal.py) and [reference metrics](../../validation/temporal_validation/results/metrics.json) contain the implementation, input hashes, environment versions, monthly counts, subgroup metrics and session sensitivity. [Run instructions](../../validation/temporal_validation/README.md) describe the required inputs and output-directory handling.
 
-
-[Return to the integrated analysis report](../churn_analysis_report.md#57-fixed-temporal-backtest) · [Temporal reproduction instructions](../../validation/temporal_validation/README.md)
+[Main analysis report](../churn_analysis_report.md#57-fixed-temporal-backtest)
